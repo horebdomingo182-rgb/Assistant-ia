@@ -115,7 +115,7 @@ async function send() {
       body: JSON.stringify({ contents: [{ parts: [{ text: context }] }] })
     });
     const data = await res.json();
-    const reply = data.candidates[0].content.parts[0].text;
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Je n'ai pas pu répondre, réessayez.";
     document.getElementById('typing').outerHTML = `<div class="msg-ia">${reply}</div>`;
   } catch(e) {
     document.getElementById('typing').outerHTML = `<div class="msg-ia">❌ Erreur: ${e.message}</div>`;
