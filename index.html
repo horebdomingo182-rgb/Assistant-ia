@@ -23,7 +23,7 @@ body { font-family: Arial, sans-serif; background: #0f0f1a; color: white; height
   <button id="gmail-btn" onclick="connectGmail()">📧 Connecter Gmail</button>
 </div>
 <div id="chat">
-  <div class="msg-ia">Bonjour ! Connectez votre Gmail pour commencer.</div>
+  <div class="msg-ia">Bonjour ! Comment puis-je vous aider ?</div>
 </div>
 <div id="bottom">
   <input id="input" type="text" placeholder="Votre message..." />
@@ -32,9 +32,9 @@ body { font-family: Arial, sans-serif; background: #0f0f1a; color: white; height
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-const GEMINI_KEY = "AIzaSyBJzciIWt-5SC4_hp8abKZqlkfC1W3Tiow";
+const CLAUDE_KEY = "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";
 const CLIENT_ID = "444306649961-vh9j1o3dkvkkje88ubcbp5u0cc32m85e.apps.googleusercontent.com";
-const SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar";
+const SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar";
 
 let accessToken = null;
 let tokenClient = null;
@@ -45,7 +45,7 @@ window.onload = function() {
     scope: SCOPES,
     callback: (response) => {
       accessToken = response.access_token;
-      addMessage("ia", "✅ Gmail connecté ! Demandez à lire vos emails ou votre agenda.");
+      addMessage("ia", "✅ Gmail connecté !");
       document.getElementById('gmail-btn').textContent = "✅ Connecté";
       document.getElementById('gmail-btn').style.background = "#2e7d32";
     }
@@ -101,20 +101,29 @@ async function send() {
       const emails = await getEmails();
       context = `Voici mes emails non lus:\n${emails}\n\nDemande: ${msg}`;
     }
-    if (msg.toLowerCase().includes("agenda") || msg.toLowerCase().includes("calendrier") || msg.toLowerCase().includes("réunion")) {
+    if (msg.toLowerCase().includes("agenda") || msg.toLowerCase().includes("calendrier")) {
       const events = await getCalendar();
       context = `Voici mes prochains événements:\n${events}\n\nDemande: ${msg}`;
     }
   }
 
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: context }] }] })
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": CLAUDE_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-allow-browser": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: context }]
+      })
     });
     const data = await res.json();
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Pas de réponse, réessayez.";
+    const reply = data?.content?.[0]?.text || "Pas de réponse, réessayez.";
     document.getElementById('typing').outerHTML = `<div class="msg-ia">${reply}</div>`;
   } catch(e) {
     document.getElementById('typing').outerHTML = `<div class="msg-ia">❌ Erreur: ${e.message}</div>`;
