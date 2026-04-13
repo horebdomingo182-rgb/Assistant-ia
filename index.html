@@ -115,10 +115,11 @@ async function send() {
       body: JSON.stringify({ contents: [{ parts: [{ text: context }] }] })
     });
     const data = await res.json();
+    console.log("Réponse Gemini:", JSON.stringify(data));
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Je n'ai pas pu répondre, réessayez.";
     document.getElementById('typing').outerHTML = `<div class="msg-ia">${reply}</div>`;
   } catch(e) {
-    document.getElementById('typing').outerHTML = `<div class="msg-ia">❌ Erreur: ${e.message}</div>`;
+    document.getElementById('typing').outerHTML = `<div class="msg-ia">❌ Erreur: ${e.message} — ${JSON.stringify(e)}</div>`;
   }
 
   document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
